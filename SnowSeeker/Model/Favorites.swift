@@ -16,10 +16,13 @@ class Favorites: ObservableObject {
     private let saveKey = "Favorites"
 
     init() {
-        // load our saved data
-
-        // still here? Use an empty array
-        resorts = []
+        if let decoded  = UserDefaults.standard.object(forKey: saveKey) as? Data,
+            let decodedResorts = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(decoded)
+            as? Set<String> {
+            resorts = decodedResorts
+        } else {
+            resorts = []
+        }
     }
 
     // returns true if our set contains this resort
@@ -42,6 +45,10 @@ class Favorites: ObservableObject {
     }
 
     func save() {
-        // write out our data
+        let encodedData = try? NSKeyedArchiver.archivedData(
+            withRootObject: resorts,
+            requiringSecureCoding: false)
+
+        UserDefaults.standard.set(encodedData, forKey: saveKey)
     }
 }
