@@ -9,19 +9,27 @@ import SwiftUI
 
 struct ContentView: View {
 
-    @StateObject var favorites = Favorites()
+    @StateObject private var favorites = Favorites()
 
-    let resorts: [Resort] = Bundle.main.decode("resorts.json")
+    @State private var showingAlert: Bool = false
+    @State private var searchText = ""
 
-    var filteredResorts: [Resort] {
+    @State private var sortedResorts: [Resort]
+    private var resorts: [Resort]
+    private var filteredResorts: [Resort] {
         if searchText.isEmpty {
-            return resorts
+            return sortedResorts
         } else {
-            return resorts.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+            return sortedResorts.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+            }
         }
     }
 
-    @State private var searchText = ""
+    init() {
+        resorts = Bundle.main.decode("resorts.json")
+        sortedResorts = resorts
+    }
 
     var body: some View {
         NavigationView {
@@ -57,6 +65,29 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Resorts")
+            .toolbar {
+                Button {
+                    showingAlert = true
+                } label: {
+                    Image(systemName: "chevron.down.square")
+                        .foregroundColor(.black)
+                }
+            }
+            .alert("Sort list by:", isPresented: $showingAlert) {
+                Button("Default") {
+                    sortedResorts = resorts
+                }
+                Button("Country") {
+                    sortedResorts.sort { firstResort, secondResort in
+                        firstResort.country.lowercased() < secondResort.country.lowercased()
+                    }
+                }
+                Button("Name") {
+                    sortedResorts.sort { firstResort, secondResort in
+                        firstResort.name.lowercased() < secondResort.name.lowercased()
+                    }
+                }
+            }
             .searchable(text: $searchText, prompt: "Search for a resort")
 
             WelcomeView()
